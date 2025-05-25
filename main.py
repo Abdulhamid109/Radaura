@@ -7,9 +7,9 @@ import io
 app = FastAPI()
 
 # Load model files
-prototxt = 'models\colorization_deploy_v2.prototxt'
-points = 'models\pts_in_hull.npy'
-model = 'models\colorization_release_v2.caffemodel'
+prototxt = 'models/colorization_deploy_v2.prototxt'
+points = 'models/pts_in_hull.npy'
+model = 'models/colorization_release_v2.caffemodel'
 
 net = cv2.dnn.readNetFromCaffe(prototxt=prototxt, caffeModel=model)
 pts = np.load(points)
