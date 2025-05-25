@@ -6,17 +6,18 @@ import io
 
 app = FastAPI()
 
-# Load model files
+
+# previous model loading
 prototxt = 'models/colorization_deploy_v2.prototxt'
 points = 'models/pts_in_hull.npy'
 model = 'models/colorization_release_v2.caffemodel'
 
 net = cv2.dnn.readNetFromCaffe(prototxt=prototxt, caffeModel=model)
 pts = np.load(points)
-pts = pts.transpose().reshape(2, 313, 1, 1)
 
 class8 = net.getLayerId("class8_ab")
 conv8 = net.getLayerId("conv8_313_rh")
+pts = pts.transpose().reshape(2, 313, 1, 1)
 net.getLayer(class8).blobs = [pts.astype("float32")]
 net.getLayer(conv8).blobs = [np.full([1, 313], 2.606, dtype="float32")]
 
@@ -28,8 +29,10 @@ def starter():
         'success':'Backend is running properly'
     }
 
+
 @app.post("/colorize/")
 async def colorize_image(file: UploadFile = File(...)):
+    # Read image from uploaded file
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -54,5 +57,6 @@ async def colorize_image(file: UploadFile = File(...)):
     colorized = np.clip(colorized, 0, 1)
     colorized = (255 * colorized).astype("uint8")
 
+    # Encode the result to JPEG
     _, buffer = cv2.imencode(".jpg", colorized)
     return StreamingResponse(io.BytesIO(buffer.tobytes()), media_type="image/jpeg")
